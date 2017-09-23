@@ -20,9 +20,19 @@ class Post(models.Model):
     status = models.CharField(max_length=10,
                               choices=STATUS_CHOICES,
                               default='draft')         #传入元组，只能选其一
+    objects = models.Manager()  #默认管理器
+    published = PublishedManager() #自定义管理器
 
     class Meta:
         ordering = ('-publish',)  #查询返回顺序为publish列降序排列
 
     def __str__(self):
         return self.title
+
+
+class PublishedManager(models.Manager):
+    def get_queryset(self):
+        return super(PublishedManager,
+                     self).get_queryset().filter(status='published')
+
+
