@@ -2,6 +2,14 @@
 from django.db import models
 from django.utils import timezone             #django的时间工具
 from django.contrib.auth.models import User   #auth应用
+from django.core.urlresolvers import reverse
+
+
+class PublishedManager(models.Manager):
+    def get_queryset(self):
+        return super(PublishedManager,
+                     self).get_queryset().filter(status='published')
+
 
 class Post(models.Model):
     STATUS_CHOICES = (
@@ -26,13 +34,12 @@ class Post(models.Model):
     class Meta:
         ordering = ('-publish',)  #查询返回顺序为publish列降序排列
 
+    def get_absolute_url(self):   #模型标准urls
+        return reverse('blog:post_detail',
+                       args=[self.publish.year,
+                             self.publish.strftime('%m'),
+                             self.publish.strftime('%d'),
+                             self.slug])
+
     def __str__(self):
         return self.title
-
-
-class PublishedManager(models.Manager):
-    def get_queryset(self):
-        return super(PublishedManager,
-                     self).get_queryset().filter(status='published')
-
-
