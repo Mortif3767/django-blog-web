@@ -3,12 +3,19 @@ from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.views.generic import ListView
 from django.core.mail import send_mail
+from django.db.models import Count
 from .models import Post, Comment
 from .forms import EmailPostForm, CommentForm
+from taggit.models import Tag
 
 
-def post_list(request):
+def post_list(request, tag_slug=None):
     object_list = Post.published.all()
+    tag = None
+    if tag_slug:
+        tag = get_object_or_404(Tag, slug=tag_slug)
+        object_list = object_list.filter(tags__in=[tag])
+
     paginator = Paginator(object_list, 3)  #每页显示三个博客
     page = request.GET.get('page')   #flask里为request.args.get('page'):GET请求传參
     try:
@@ -20,7 +27,7 @@ def post_list(request):
     return render(request,
                   'blog/post/list.html',
                   {'posts': posts,
-                   'page': page})        #留意这个传过去的posts，为何在页码模版中可以posts.page?(页面对象)
+                   'tag': tag})        #留意这个传过去的posts，为何在页码模版中可以posts.page?(页面对象)
 
 
 def post_detail(request, year, month, day, post):
@@ -41,12 +48,18 @@ def post_detail(request, year, month, day, post):
             comment_form = CommentForm()
     else:
         comment_form = CommentForm()
+    post_tags_ids = post.tags.values_list('id', flat=True)
+    #equal to [post_tag.id for post_tag in post.tags]
+    #如果没有flat=True，返回元组列表
+    similar_posts = Post.published.filter(tags__in=post_tags_ids).exclude(id=post.id)
+    similar_posts = similar_posts.annotate(same_tags=Count('tags')).order_by('-same_tags','-publish')[:4]
     return render(request,
                   'blog/post/detail.html',
                   {'post': post,
                    'comments': comments,
                    'new_comment': new_comment,   #相当于post—share里的sent做标记用
-                   'comment_form': comment_form})
+                   'comment_form': comment_form,
+                   'similar_posts': similar_posts})
 
 
 def post_share(request, post_id):
