@@ -3,8 +3,8 @@ from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.views.generic import ListView
 from django.core.mail import send_mail
-from .models import Post
-from .forms import EmailPostForm
+from .models import Post, Comment
+from .forms import EmailPostForm, CommentForm
 
 
 def post_list(request):
@@ -29,14 +29,30 @@ def post_detail(request, year, month, day, post):
                                    publish__year=year,
                                    publish__month=month,
                                    publish__day=day)
+    comments = post.comments.filter(active=True)
+    new_comment = None
+
+    if request.method == 'POST':
+        comment_form = CommentForm(data=request.POST) #留意ModelForm与Form取值的区别
+        if comment_form.is_valid():
+            new_comment = comment_form.save(commit=False)
+            new_comment.post = post
+            new_comment.save()
+            comment_form = CommentForm()
+    else:
+        comment_form = CommentForm()
     return render(request,
                   'blog/post/detail.html',
-                  {'post': post})
+                  {'post': post,
+                   'comments': comments,
+                   'new_comment': new_comment,   #相当于post—share里的sent做标记用
+                   'comment_form': comment_form})
 
 
 def post_share(request, post_id):
     post = get_object_or_404(Post, id=post_id, status='published')
     
+    cd = None
     sent = False
     if request.method == 'POST':
         form = EmailPostForm(request.POST) #注意django从表单中获取数据的方式，与flask不同
@@ -48,7 +64,7 @@ def post_share(request, post_id):
             message = 'Read "{}" at {}\n\n{}\'s comments: {}'.format(post.title, post_url, cd['name'],
                 cd['comments'])
             send_mail(subject, message, 'garryrich@gmail.com', [cd['to']])
-            sent = True
+            sent = True  #通过这个变量标记确定页面“跳转”显示结果
     else:
         form = EmailPostForm()
     return render(request, 'blog/post/share.html', {'post': post, 'form': form, 'sent': sent, 'cd':cd})

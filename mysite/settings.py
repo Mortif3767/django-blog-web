@@ -38,6 +38,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'blog',
+    'taggit',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -104,6 +105,6 @@ STATIC_URL = '/static/'
 
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'garryrich@gmail.com'
-EMAIL_HOST_PASSWORD = 'Guozhen911303'
+EMAIL_HOST_PASSWORD = '*******'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
