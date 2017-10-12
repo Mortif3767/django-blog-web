@@ -15,3 +15,7 @@ class CommentForm(forms.ModelForm): #django自带根据model自建表单，自�
     class Meta:
         model = Comment
         fields = ('name', 'email', 'body') #fields包含要显示的内容，exclude用来表示剔除的内容
+
+
+class SearchForm(forms.Form):
+    query = forms.CharField()
