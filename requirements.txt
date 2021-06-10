@@ -1,6 +1,6 @@
 certifi==2017.7.27.1
 chardet==3.0.4
-Django==1.8.6
+Django==2.2.24
 django-haystack==2.4.0
 django-taggit==0.22.1
 idna==2.6
